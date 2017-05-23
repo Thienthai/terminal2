@@ -79,7 +79,7 @@ void newformat(){
 
 void kill_child(int sig){
     printf("\n");
-    kill(2);
+    kill(getpid(),SIGKILL);
 }
 
 void free_command(char **cmd){
@@ -108,7 +108,7 @@ void redirect(char *source,char *des){
     close (in);
     close (out);
 
-    while (1)
+   while (1)
     {
         got = fread (buffer, 1, 1024, stdin);
         if (got <=0) break;
@@ -151,11 +151,11 @@ void command_list(char **prog_argv,int *process){
                 exit(2);
     }else if(strcmp(prog_argv[0],"jobs") == 0){
                 exit(0);
-    }else{
-        printf("no command found\n");
-        exit(0);
     }
-
+        
+    printf("no command found\n");
+    exit(0);
+    
 }
 
 void removeChar(char *str, char garbage) {
@@ -228,11 +228,10 @@ void fork_func(){
                 stateprocess[run] = 2;
                 process[run++] = pid;
                 ret = waitpid(-1,&status,WNOHANG);
-                //printf("return\n");
             }else{
                 int stopid = pid;
                 ret = waitpid(pid,&status,WUNTRACED);
-                if(WEXITSTATUS(status) == 17){
+                if(WEXITSTATUS(status) > 0){
                     process[run] = stopid;
                     stateprocess[run++] = 1;
                 }
@@ -250,7 +249,7 @@ void fork_func(){
                 exit(0);
             }
             if(strcmp(prog_argv[0],"exit") == 0){
-                printf("\nBYE...\n");
+                printf("\n");
                 free(prog_argv);
                 free(process);
                 free(stateprocess);
@@ -286,7 +285,6 @@ void fork_func(){
 
 int main(int argc, char** argv) {
 
-    printf("=== WELCOME TO MY SHELL ===\n\n");
     fork_func();
     return (EXIT_SUCCESS);
 }
