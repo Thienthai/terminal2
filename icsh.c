@@ -79,7 +79,7 @@ void newformat(){
 
 void kill_child(int sig){
     printf("\n");
-    kill(2);
+    kill(getpid(),SIGKILL);
 }
 
 void free_command(char **cmd){
