@@ -79,7 +79,7 @@ void newformat(){
 
 void kill_child(int sig){
     printf("\n");
-    kill(getpid(),SIGKILL);
+    kill(2);
 }
 
 void free_command(char **cmd){
@@ -108,7 +108,7 @@ void redirect(char *source,char *des){
     close (in);
     close (out);
 
-   while (1)
+    while (1)
     {
         got = fread (buffer, 1, 1024, stdin);
         if (got <=0) break;
@@ -141,21 +141,19 @@ void command_list(char **prog_argv,int *process){
             sleep(sec);
         //}
         exit(0);
-    }else if(strcmp(prog_argv[0],"resume") == 0){
-        exit(0);
-    }else if(prog_argv[1] != NULL && strcmp(prog_argv[1],">") == 0){
+    }else if(strcmp(prog_argv[1],">") == 0){
         redirect(prog_argv[0],prog_argv[2]);
-    }else if(prog_argv[1] != NULL && strcmp(prog_argv[2],"<")){
+    }else if(strcmp(prog_argv[2],"<")){
         redirect(prog_argv[2],prog_argv[0]);
     }else if(strcmp(prog_argv[0],"exit") == 0){
                 exit(2);
     }else if(strcmp(prog_argv[0],"jobs") == 0){
                 exit(0);
+    }else{
+        // printf("no command found\n");
+        // exit(0);
     }
-        
-    printf("no command found\n");
-    exit(0);
-    
+
 }
 
 void removeChar(char *str, char garbage) {
@@ -202,6 +200,17 @@ void fork_func(){
         else if (pid == 0)
         {
             signal(SIGINT,kill_child);
+            if(strcmp(prog_argv[0],"ls") != 0 && strcmp(prog_argv[0],"jobs") != 0 && strcmp(prog_argv[0],"count") != 0
+            && strcmp(prog_argv[0],"sleep") != 0 && strcmp(prog_argv[0],"echo") != 0 && strcmp(prog_argv[0],"fg") != 0
+            && strcmp(prog_argv[0],"bg") != 0 ){
+
+                if(prog_argv[1] != NULL){
+                     if(strcmp(prog_argv[1],"<") == 0 || strcmp(prog_argv[1],">") == 0)
+                            command_list(prog_argv,process);
+                }
+                  printf("-bash: %s: command not found\n",prog_argv[0]);
+                  exit(0);
+            }
             command_list(prog_argv,process);
         }
         else
@@ -228,10 +237,11 @@ void fork_func(){
                 stateprocess[run] = 2;
                 process[run++] = pid;
                 ret = waitpid(-1,&status,WNOHANG);
+                //printf("return\n");
             }else{
                 int stopid = pid;
                 ret = waitpid(pid,&status,WUNTRACED);
-                if(WEXITSTATUS(status) > 0){
+                if(WEXITSTATUS(status) == 17){
                     process[run] = stopid;
                     stateprocess[run++] = 1;
                 }
@@ -239,17 +249,9 @@ void fork_func(){
             if(strcmp(prog_argv[0],"jobs") == 0){
                 jobPrint(process,stateprocess);
             }
-            if(strcmp(prog_argv[0],"resume") == 0){
-                int j;
-                printf("Enter your resume process id : ");
-                scanf("%d",&j);
-                printf("\n");
-                kill(j,SIGCONT);
-                waitpid(-1,NULL,0);
-                exit(0);
-            }
+
             if(strcmp(prog_argv[0],"exit") == 0){
-                printf("\n");
+                printf("\nBYE...\n");
                 free(prog_argv);
                 free(process);
                 free(stateprocess);
@@ -285,6 +287,7 @@ void fork_func(){
 
 int main(int argc, char** argv) {
 
+    printf("=== WELCOME TO MY SHELL ===\n\n");
     fork_func();
     return (EXIT_SUCCESS);
 }
